@@ -2,7 +2,6 @@ import React from "react";
 import { useReducer, useEffect } from "react";
 import reducer from "./reducer";
 import Length from "./Length";
-import { Stardos_Stencil } from "next/font/google";
 import { BsFillPlayFill, BsFillPauseFill } from "react-icons/bs";
 import { GrPowerReset } from "react-icons/gr";
 import timesupSound from "/public/timesupSound.mp3";
