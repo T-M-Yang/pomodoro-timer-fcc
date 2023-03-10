@@ -6,27 +6,20 @@ const Length = ({
   type,
   time,
   formatTime,
-  increBreakTime,
-  decreBreakTime,
-  increCodingTime,
-  decreCodingTime,
   isCoding,
+  handleTimeChange,
 }) => {
   return (
-    <section className="grid gap-3 border grid-col-1 place-items-center">
+    <section className="grid grid-col-1 place-items-center">
       <h2>{title}</h2>
-      <div className="flex gap-3">
-        <button
-          onClick={() => (isCoding ? increCodingTime() : increBreakTime())}
-        >
+      <div className="flex gap-3 pb-3 text-3xl">
+        <button onClick={() => handleTimeChange(60, type)}>
           <span role="img" aria-label="increase time">
             <AiFillPlusCircle />
           </span>
         </button>
         <h2 className="">{formatTime(time)}</h2>
-        <button
-          onClick={() => (isCoding ? decreCodingTime() : decreBreakTime())}
-        >
+        <button onClick={() => handleTimeChange(-60, type)}>
           <span role="img" aria-label="decrease time">
             <AiOutlineMinusCircle />
           </span>

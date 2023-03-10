@@ -2,6 +2,10 @@ import React from "react";
 import { useReducer, useEffect } from "react";
 import reducer from "./reducer";
 import Length from "./Length";
+import { Stardos_Stencil } from "next/font/google";
+import { BsFillPlayFill, BsFillPauseFill } from "react-icons/bs";
+import { GrPowerReset } from "react-icons/gr";
+import timesupSound from "/public/timesupSound.mp3";
 
 export const initialState = {
   displayTime: 25 * 60,
@@ -11,8 +15,21 @@ export const initialState = {
   isCoding: true,
 };
 
+const testingState = {
+  displayTime: 3,
+  breakTime: 3,
+  codingTime: 3,
+  isTimerOn: false,
+  isCoding: true,
+};
+
+const testingMode = false;
+
 const App = () => {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(
+    reducer,
+    testingMode ? testingState : initialState
+  );
 
   const formatTime = (time) => {
     let minutes = Math.floor(time / 60);
@@ -22,59 +39,95 @@ const App = () => {
     }`;
   };
 
-  const increBreakTime = () => {
-    dispatch({ type: "increase_break_time" });
+  const handleTimeChange = (timeDelta, type) => {
+    if (type === "break") {
+      if (state.breakTime <= 60 && timeDelta < 0) return;
+      dispatch({
+        type: "set_break_time",
+        payload: state.breakTime + timeDelta,
+      });
+    }
+    if (type === "coding") {
+      if (state.codingTime <= 60 && timeDelta < 0) return;
+      dispatch({
+        type: "set_coding_time",
+        payload: state.codingTime + timeDelta,
+      });
+    }
   };
-
-  const decreBreakTime = () => {
-    dispatch({ type: "decrease_break_time" });
-  };
-  const increCodingTime = () => {
-    dispatch({ type: "increase_coding_time" });
-  };
-
-  const decreCodingTime = () => {
-    dispatch({ type: "decrease_coding_time" });
-  };
-
-  const setDisplayTime = () => {
+  useEffect(() => {
     dispatch({
       type: "set_display_time",
       payload: state.isCoding ? state.codingTime : state.breakTime,
     });
-  };
+  }, [state.isCoding, state.breakTime, state.codingTime]);
 
   useEffect(() => {
-    setDisplayTime();
-  }, []);
+    let intervalId;
+
+    if (state.isTimerOn) {
+      intervalId = setInterval(() => {
+        dispatch({ type: "tick" });
+      }, 1000);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [state.isTimerOn]);
+
+  useEffect(() => {
+    const sound = new Audio(timesupSound);
+    if (state.displayTime === 0) {
+      sound.play();
+    }
+  }, [state.displayTime]);
 
   return (
-    <main className="flex flex-col items-center justify-center h-screen">
-      <div className="grid grid-cols-1 space-y-5 place-items-center place-content-center">
-        <h1>Pomodoro Timer</h1>
-        <h3>{state.isCoding ? "Coding" : "Break"}</h3>
-        <h2>{formatTime(state.displayTime)}</h2>
-        <div>
-          <Length
-            title={"Break Length"}
-            type={"break"}
-            id="break-label"
-            formatTime={formatTime}
-            time={state.breakTime}
-            increBreakTime={increBreakTime}
-            decreBreakTime={decreBreakTime}
-            isCoding={state.isCoding}
-          />
-          <Length
-            title={"Coding Length"}
-            type={"coding"}
-            id="coding-label"
-            formatTime={formatTime}
-            time={state.codingTime}
-            increCodingTime={increCodingTime}
-            decreCodingTime={decreCodingTime}
-            isCoding={state.isCoding}
-          />
+    <main className="flex flex-col items-center justify-center h-screen bg-black">
+      <div className="relative group">
+        <div className="absolute transition duration-1000 rounded-lg opacity-75 animate-tilt group-hover:duration-200 -inset-1 bg-gradient-to-t from-red-600 to-green-700 blur-lg group-hover:opacity-100"></div>
+        <div className="relative grid grid-cols-1 space-y-5 bg-black rounded-lg opacity-70 p-7 place-items-center place-content-center ">
+          <h1 className="text-3xl">Pomodoro Timer</h1>
+          <h3 className="text-3xl">{state.isCoding ? "Coding" : "Break"}</h3>
+          <h2 className="text-5xl">{formatTime(state.displayTime)}</h2>
+          <div>
+            <Length
+              title={"Break Length"}
+              type={"break"}
+              id="break-label"
+              formatTime={formatTime}
+              handleTimeChange={handleTimeChange}
+              time={state.breakTime}
+              isCoding={state.isCoding}
+            />
+            <Length
+              title={"Coding Length"}
+              type={"coding"}
+              id="coding-label"
+              formatTime={formatTime}
+              handleTimeChange={handleTimeChange}
+              time={state.codingTime}
+              isCoding={state.isCoding}
+            />
+          </div>
+          <div className="flex gap-5 text-5xl">
+            <button onClick={() => dispatch({ type: "toggle_timer" })}>
+              {state.isTimerOn ? (
+                <span role="icon" aria-label="pause">
+                  <BsFillPauseFill />
+                </span>
+              ) : (
+                <span role="icon" aria-label="start">
+                  <BsFillPlayFill />
+                </span>
+              )}
+            </button>
+
+            <button onClick={() => dispatch({ type: "reset_timer" })}>
+              <span role="icon" aria-label="reset">
+                <GrPowerReset />
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </main>
